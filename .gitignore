@@ -1,3 +1,4 @@
+
 # Dependencies
 node_modules/
 /.pnp
@@ -6,11 +7,17 @@ node_modules/
 # Testing
 /coverage
 
-# Production
+# Production and generated files
 /build
 /dist
 /.next
 /out
+*.tsbuildinfo
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
 
 # Misc
 .DS_Store
@@ -19,9 +26,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.env
-.env.local
-.env.*.local
 
 # IDE
 .vscode/
@@ -30,14 +34,13 @@ yarn-error.log*
 *.swo
 *~
 
-# OS
+# Operating system
 Thumbs.db
-.DS_Store
 
 # Database
 *.db
 *.sqlite
-.env.database
+*.sqlite3
 
 # Docker
-.dockerignore
+# Keep Docker configuration files if needed
