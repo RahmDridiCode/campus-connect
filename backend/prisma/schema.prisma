@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+enum StudyLevel {
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum RequiredLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum HelpRequestStatus {
+  OPEN
+  HELP_ACCEPTED
+  COMPLETED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  fullName  String
+  specialty String?
+  studyLevel StudyLevel @default(BACHELOR)
+  skills    String[] @default([]) // JSON array stored as TEXT
+  role      UserRole @default(STUDENT)
+  bio       String?
+  availabilities String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  helpRequests  HelpRequest[]
+  proposals     HelpProposal[] @relation("proposer")
+  reviewsGiven  Review[] @relation("reviewer")
+  reviewsReceived Review[] @relation("reviewee")
+  reportsCreated Report[] @relation("reporter")
+  reportsReviewed Report[] @relation("reviewer")
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// ============================================
+// HELP REQUEST MODEL
+// ============================================
+
+model HelpRequest {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  subject         String
+  requiredLevel   RequiredLevel
+  authorId        String
+  status          HelpRequestStatus @default(OPEN)
+  availabilities  String[] @default([]) // JSON array
+  hidden          Boolean  @default(false) // masquée par un admin après signalement
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  author          User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  proposals       HelpProposal[]
+  reviews         Review[]
+  reports         Report[]
+
+  @@index([authorId])
+  @@index([status])
+  @@index([subject])
+  @@index([requiredLevel])
+  @@map("help_requests")
+}
+
+// ============================================
+// HELP PROPOSAL MODEL
+// ============================================
+
+model HelpProposal {
+  id              String   @id @default(cuid())
+  requestId       String
+  proposerId      String
+  message         String
+  availabilities  String[] @default([]) // JSON array
+  status          ProposalStatus @default(PENDING)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  request         HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  proposer        User @relation("proposer", fields: [proposerId], references: [id], onDelete: Cascade)
+
+  // Unique constraint: prevent duplicate proposals from same user for same request
+  @@unique([requestId, proposerId])
+  @@index([requestId])
+  @@index([proposerId])
+  @@index([status])
+  @@map("help_proposals")
+}
+
+// ============================================
+// REVIEW MODEL
+// ============================================
+
+model Review {
+  id              String   @id @default(cuid())
+  requestId       String
+  authorId        String   // User who wrote the review
+  targetId        String   // User being reviewed
+  rating          Int      // 1-5
+  comment         String?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  request         HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author          User @relation("reviewer", fields: [authorId], references: [id], onDelete: Cascade)
+  target          User @relation("reviewee", fields: [targetId], references: [id], onDelete: Cascade)
+
+  // Unique constraint: one review per reviewer-reviewee pair per request
+  @@unique([requestId, authorId, targetId])
+  @@index([requestId])
+  @@index([authorId])
+  @@index([targetId])
+  @@map("reviews")
+}
+
+// ============================================
+// REPORT MODEL
+// ============================================
+
+model Report {
+  id              String   @id @default(cuid())
+  requestId       String
+  reporterId      String
+  reason          String
+  description     String?
+  status          ReportStatus @default(PENDING)
+  notes           String?   // Notes de l'administrateur
+  reviewedBy      String?   // Admin ID who reviewed
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  request         HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  reporter        User @relation("reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewer        User? @relation("reviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([requestId])
+  @@index([reporterId])
+  @@index([status])
+  @@index([reviewedBy])
+  @@map("reports")
+}
