@@ -1,17 +1,16 @@
-
 # Dependencies
 node_modules/
-/.pnp
+.pnp
 .pnp.js
 
 # Testing
-/coverage
+coverage/
 
 # Production and generated files
-/build
-/dist
-/.next
-/out
+build/
+dist/
+.next/
+out/
 *.tsbuildinfo
 
 # Environment variables and secrets
@@ -41,6 +40,3 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
-
-# Docker
-# Keep Docker configuration files if needed
