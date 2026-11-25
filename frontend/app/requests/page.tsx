@@ -46,10 +46,12 @@ function RequestsContent() {
             : 'Trouvez une demande à laquelle vous pouvez répondre.'
         }
         actions={
-          <Link href="/requests/new" className="btn-primary">
-            <Icon name="plus" className="h-4 w-4" />
-            Nouvelle demande
-          </Link>
+          isAuthenticated ? (
+            <Link href="/requests/new" className="btn-primary">
+              <Icon name="plus" className="h-4 w-4" />
+              Nouvelle demande
+            </Link>
+          ) : undefined
         }
       />
 
@@ -159,7 +161,9 @@ function RequestsContent() {
                 ? 'Essayez de modifier ou de réinitialiser vos filtres.'
                 : "Aucune demande n'a encore été publiée."
             }
-            action={{ label: 'Publier une demande', href: '/requests/new' }}
+            action={
+              isAuthenticated ? { label: 'Publier une demande', href: '/requests/new' } : undefined
+            }
           />
         </div>
       ) : (

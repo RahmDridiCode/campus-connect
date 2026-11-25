@@ -41,6 +41,16 @@ export const CardListSkeleton: React.FC<{ count?: number }> = ({ count = 3 }) =>
 // ---------- Bouton avec état de chargement ----------
 type Variant = 'primary' | 'secondary' | 'danger' | 'danger-outline' | 'success' | 'ghost';
 
+// Classes littérales : Tailwind ne détecte pas les noms construits dynamiquement
+const variantClasses: Record<Variant, string> = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  danger: 'btn-danger',
+  'danger-outline': 'btn-danger-outline',
+  success: 'btn-success',
+  ghost: 'btn-ghost',
+};
+
 export const Button: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
     variant?: Variant;
@@ -61,7 +71,7 @@ export const Button: React.FC<
     {...rest}
     disabled={disabled || loading}
     aria-busy={loading || undefined}
-    className={`btn-${variant} ${size === 'lg' ? 'btn-lg' : size === 'sm' ? 'btn-sm' : ''} ${className}`}
+    className={`${variantClasses[variant]} ${size === 'lg' ? 'btn-lg' : size === 'sm' ? 'btn-sm' : ''} ${className}`}
   >
     {loading && <Spinner />}
     {children}
