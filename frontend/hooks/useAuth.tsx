@@ -1,6 +1,15 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, FC } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  ReactNode,
+  FC,
+} from 'react';
 import type { User, RegisterFormData, AuthContextType } from '@/types';
 import { authAPI } from '@/lib/auth';
 
@@ -39,7 +48,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Fonction de connexion
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = useCallback(async (email: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -55,10 +64,10 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Fonction d'inscription
-  const register = async (data: RegisterFormData): Promise<void> => {
+  const register = useCallback(async (data: RegisterFormData): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -71,10 +80,10 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Fonction de déconnexion
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       await authAPI.logout();
@@ -86,10 +95,10 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Fonction de mise à jour du profil
-  const updateProfile = async (data: Partial<User>): Promise<void> => {
+  const updateProfile = useCallback(async (data: Partial<User>): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -102,18 +111,21 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    login,
-    register,
-    logout,
-    updateProfile,
-    error,
-  };
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      logout,
+      updateProfile,
+      error,
+    }),
+    [user, isLoading, error, login, register, logout, updateProfile],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
