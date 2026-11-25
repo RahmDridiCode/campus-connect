@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
-import { LoadingState } from './UI';
+import { AccessDenied, LoadingState } from './UI';
 
 interface AppShellProps {
   children: ReactNode;
@@ -34,16 +34,16 @@ export const AppShell = ({
   const forbidden = requireAdmin && user && user.role !== 'ADMIN';
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2"
+      >
+        Aller au contenu
+      </a>
       <Navbar />
-      <main className="container py-8 flex-1">
-        {blocked ? (
-          <LoadingState />
-        ) : forbidden ? (
-          <p className="text-red-700">Accès réservé aux administrateurs.</p>
-        ) : (
-          children
-        )}
+      <main id="contenu" className="container flex-1 py-8">
+        {blocked ? <LoadingState /> : forbidden ? <AccessDenied /> : children}
       </main>
       <Footer />
     </div>

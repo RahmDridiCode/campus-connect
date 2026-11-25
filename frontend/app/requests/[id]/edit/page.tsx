@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { AppShell } from '@/components/AppShell';
 import { RequestForm, RequestFormPayload } from '@/components/RequestForm';
-import { ErrorState, LoadingState } from '@/components/UI';
+import { ErrorState, LoadingState, PageHeader } from '@/components/UI';
 import { HelpRequest } from '@/types/requests';
 import { errorMessage } from '@/types/app';
 
@@ -33,15 +33,17 @@ export default function EditRequestPage() {
 
   return (
     <AppShell requireAuth>
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-4">Modifier la demande</h1>
-        {error ? (
-          <ErrorState message={error} />
-        ) : !request ? (
-          <LoadingState />
-        ) : (
-          <RequestForm initial={request} submitLabel="Enregistrer" onSubmit={update} />
-        )}
+      <div className="mx-auto max-w-2xl">
+        <PageHeader title="Modifier la demande" />
+        <div className="card p-5 sm:p-8">
+          {error ? (
+            <ErrorState message={error} />
+          ) : !request ? (
+            <LoadingState />
+          ) : (
+            <RequestForm initial={request} submitLabel="Enregistrer" onSubmit={update} />
+          )}
+        </div>
       </div>
     </AppShell>
   );

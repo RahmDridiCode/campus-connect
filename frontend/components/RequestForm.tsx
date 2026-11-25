@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Button } from './UI';
 
 // Validation côté client (le serveur revalide toujours)
 const schema = z.object({
@@ -30,7 +31,7 @@ interface Props {
   onSubmit: (data: RequestFormPayload) => Promise<void>;
 }
 
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded';
+const inputClass = 'input';
 
 const Field = ({
   id,
@@ -44,12 +45,12 @@ const Field = ({
   children: React.ReactNode;
 }) => (
   <div>
-    <label htmlFor={id} className="block text-sm font-medium mb-1">
+    <label htmlFor={id} className="label">
       {label}
     </label>
     {children}
     {error && (
-      <p className="text-sm text-red-600 mt-1" role="alert">
+      <p className="field-error" role="alert">
         {error}
       </p>
     )}
@@ -90,30 +91,32 @@ export const RequestForm = ({ initial, submitLabel, onSubmit }: Props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(submit)} className="space-y-5" noValidate>
       {serverError && (
-        <div className="p-3 bg-red-100 text-red-700 rounded" role="alert">
+        <div className="alert-error" role="alert">
           {serverError}
         </div>
       )}
       <Field id="title" label="Titre" error={errors.title?.message}>
         <input id="title" {...register('title')} className={inputClass} />
       </Field>
-      <Field id="subject" label="Matière" error={errors.subject?.message}>
-        <input
-          id="subject"
-          {...register('subject')}
-          className={inputClass}
-          placeholder="Ex : Java"
-        />
-      </Field>
-      <Field id="requiredLevel" label="Niveau requis">
-        <select id="requiredLevel" {...register('requiredLevel')} className={inputClass}>
-          <option value="BEGINNER">Débutant</option>
-          <option value="INTERMEDIATE">Intermédiaire</option>
-          <option value="ADVANCED">Avancé</option>
-        </select>
-      </Field>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field id="subject" label="Matière" error={errors.subject?.message}>
+          <input
+            id="subject"
+            {...register('subject')}
+            className={inputClass}
+            placeholder="Ex : Java"
+          />
+        </Field>
+        <Field id="requiredLevel" label="Niveau requis">
+          <select id="requiredLevel" {...register('requiredLevel')} className={inputClass}>
+            <option value="BEGINNER">Débutant</option>
+            <option value="INTERMEDIATE">Intermédiaire</option>
+            <option value="ADVANCED">Avancé</option>
+          </select>
+        </Field>
+      </div>
       <Field id="description" label="Description" error={errors.description?.message}>
         <textarea id="description" rows={5} {...register('description')} className={inputClass} />
       </Field>
@@ -129,13 +132,9 @@ export const RequestForm = ({ initial, submitLabel, onSubmit }: Props) => {
           placeholder="Lundi 14h-16h, Jeudi 15h-17h"
         />
       </Field>
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-      >
+      <Button type="submit" loading={isSubmitting}>
         {isSubmitting ? 'Envoi...' : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 };

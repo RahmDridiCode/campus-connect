@@ -2,92 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply text-slate-900 tracking-tight;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+  /* Respect de la préférence « réduire les animations » */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
-html {
-  scroll-behavior: smooth;
-}
+@layer components {
+  .container {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f9fafb;
-  color: #1f2937;
-}
+  /* ---------- Boutons ---------- */
+  .btn {
+    @apply inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800;
+  }
+  .btn-secondary {
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white shadow-sm hover:bg-rose-700;
+  }
+  .btn-danger-outline {
+    @apply btn border border-rose-300 bg-white text-rose-700 hover:bg-rose-50;
+  }
+  .btn-success {
+    @apply btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700;
+  }
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100;
+  }
+  .btn-lg {
+    @apply min-h-[48px] px-6 py-3 text-base;
+  }
+  .btn-sm {
+    @apply min-h-[36px] px-3 py-1.5 text-sm;
+  }
 
-/* ============================================
-   Forms
-   ============================================ */
+  /* ---------- Formulaires ---------- */
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+  .input {
+    @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:bg-slate-100 disabled:text-slate-500;
+  }
+  .input-error {
+    @apply border-rose-400 focus:border-rose-500 focus:ring-rose-500/30;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm text-rose-700;
+  }
+  .field-hint {
+    @apply mt-1.5 text-xs text-slate-500;
+  }
 
-input,
-textarea,
-select {
-  font-family: inherit;
-  font-size: inherit;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-/* ============================================
-   Buttons
-   ============================================ */
-
-button {
-  cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ============================================
-   Links
-   ============================================ */
-
-a {
-  color: #2563eb;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: #1d4ed8;
-  text-decoration: underline;
-}
-
-/* ============================================
-   Utilities
-   ============================================ */
-
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  /* ---------- Surfaces ---------- */
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-card;
+  }
+  .card-hover {
+    @apply transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-pop;
+  }
+  .link {
+    @apply font-medium text-brand-700 hover:text-brand-800 hover:underline;
+  }
+  .page-title {
+    @apply text-2xl font-bold sm:text-3xl;
+  }
+  .alert {
+    @apply rounded-lg border px-4 py-3 text-sm;
+  }
+  .alert-success {
+    @apply alert border-emerald-200 bg-emerald-50 text-emerald-800;
+  }
+  .alert-error {
+    @apply alert border-rose-200 bg-rose-50 text-rose-800;
+  }
+  .alert-info {
+    @apply alert border-brand-200 bg-brand-50 text-brand-800;
+  }
 }

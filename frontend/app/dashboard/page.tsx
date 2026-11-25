@@ -6,7 +6,9 @@ import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { AppShell } from '@/components/AppShell';
 import { DashboardStats } from '@/components/DashboardStats';
-import { ErrorState, LoadingState, StatusBadge, EmptyState } from '@/components/UI';
+import { CardListSkeleton, EmptyState, ErrorState, PageHeader, StatusBadge } from '@/components/UI';
+import { Icon } from '@/components/Icons';
+import { formatDate } from '@/lib/format';
 import { DashboardData, errorMessage } from '@/types/app';
 
 export default function DashboardPage() {
@@ -24,44 +26,87 @@ export default function DashboardPage() {
 
   return (
     <AppShell requireAuth>
-      <h1 className="text-3xl font-bold mb-6">Bonjour, {user?.fullName}</h1>
+      <PageHeader
+        title={`Bonjour, ${user?.fullName?.split(' ')[0] ?? ''}`}
+        description="Voici un aperçu de votre activité sur CampusConnect."
+        actions={
+          <>
+            <Link href="/requests" className="btn-secondary">
+              <Icon name="search" className="h-4 w-4" />
+              Parcourir
+            </Link>
+            <Link href="/requests/new" className="btn-primary">
+              <Icon name="plus" className="h-4 w-4" />
+              Nouvelle demande
+            </Link>
+          </>
+        }
+      />
 
       {error && <ErrorState message={error} />}
-      {!data && !error && <LoadingState />}
+      {!data && !error && <CardListSkeleton count={6} />}
 
       {data && (
         <>
+          {data.receivedProposals > 0 && (
+            <Link
+              href="/proposals"
+              className="alert-info mb-6 flex items-center justify-between gap-3 hover:no-underline"
+            >
+              <span>
+                Vous avez reçu <strong>{data.receivedProposals}</strong> proposition
+                {data.receivedProposals > 1 ? 's' : ''} d'aide.
+              </span>
+              <span className="inline-flex items-center gap-1 font-medium">
+                Consulter <Icon name="arrowRight" className="h-4 w-4" />
+              </span>
+            </Link>
+          )}
+
           <DashboardStats data={data} />
 
-          <div className="grid md:grid-cols-2 gap-6 mt-8">
-            <section className="bg-white rounded-lg shadow p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-bold">Mes dernières demandes</h2>
-                <Link href="/requests/new" className="text-sm">
-                  + Nouvelle
+          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <section className="card p-5" aria-labelledby="dr">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 id="dr" className="text-lg font-semibold">
+                  Mes dernières demandes
+                </h2>
+                <Link href="/requests?mine=true" className="link text-sm">
+                  Tout voir
                 </Link>
               </div>
               {data.recentRequests.length === 0 ? (
                 <EmptyState
                   title="Aucune demande"
                   description="Publiez votre première demande d'aide."
+                  action={{ label: 'Publier une demande', href: '/requests/new' }}
                 />
               ) : (
-                <ul className="divide-y">
+                <ul className="divide-y divide-slate-100">
                   {data.recentRequests.map((r) => (
-                    <li key={r.id} className="py-2 flex justify-between gap-2">
-                      <Link href={`/requests/${r.id}`}>{r.title}</Link>
-                      <StatusBadge status={r.status} />
+                    <li key={r.id}>
+                      <Link
+                        href={`/requests/${r.id}`}
+                        className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 text-slate-800 hover:bg-slate-50 hover:no-underline"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">{r.title}</span>
+                          <span className="text-xs text-slate-500">{formatDate(r.createdAt)}</span>
+                        </span>
+                        <StatusBadge status={r.status} />
+                      </Link>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
 
-            <section className="bg-white rounded-lg shadow p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-bold">Mes dernières propositions</h2>
-                <Link href="/proposals" className="text-sm">
+            <section className="card p-5" aria-labelledby="dp">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 id="dp" className="text-lg font-semibold">
+                  Mes dernières propositions
+                </h2>
+                <Link href="/proposals" className="link text-sm">
                   Tout voir
                 </Link>
               </div>
@@ -69,13 +114,22 @@ export default function DashboardPage() {
                 <EmptyState
                   title="Aucune proposition"
                   description="Parcourez les demandes pour aider un étudiant."
+                  action={{ label: 'Parcourir les demandes', href: '/requests' }}
                 />
               ) : (
-                <ul className="divide-y">
+                <ul className="divide-y divide-slate-100">
                   {data.recentProposals.map((p) => (
-                    <li key={p.id} className="py-2 flex justify-between gap-2">
-                      <Link href={`/requests/${p.request.id}`}>{p.request.title}</Link>
-                      <StatusBadge status={p.status} />
+                    <li key={p.id}>
+                      <Link
+                        href={`/requests/${p.request.id}`}
+                        className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 text-slate-800 hover:bg-slate-50 hover:no-underline"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">{p.request.title}</span>
+                          <span className="text-xs text-slate-500">{formatDate(p.createdAt)}</span>
+                        </span>
+                        <StatusBadge status={p.status} />
+                      </Link>
                     </li>
                   ))}
                 </ul>

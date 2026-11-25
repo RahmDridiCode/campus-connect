@@ -7,6 +7,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from './UI';
 
 const loginSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -44,16 +45,20 @@ export const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
       {justRegistered && (
-        <div role="status" className="p-3 bg-green-100 text-green-800 rounded">
+        <div role="status" className="alert-success">
           Votre compte a été créé avec succès. Connectez-vous pour continuer.
         </div>
       )}
-      {serverError && <div className="p-3 bg-red-100 text-red-700 rounded">{serverError}</div>}
+      {serverError && (
+        <div className="alert-error" role="alert">
+          {serverError}
+        </div>
+      )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-1">
+        <label htmlFor="email" className="label">
           Email
         </label>
         <input
@@ -61,14 +66,18 @@ export const LoginForm = () => {
           type="email"
           id="email"
           placeholder="votre@email.com"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
-        {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
+        {errors.email && (
+          <p className="field-error" role="alert">
+            {errors.email.message}
+          </p>
+        )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium mb-1">
+        <label htmlFor="password" className="label">
           Mot de passe
         </label>
         <input
@@ -76,23 +85,23 @@ export const LoginForm = () => {
           type="password"
           id="password"
           placeholder="••••••"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
-        {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>}
+        {errors.password && (
+          <p className="field-error" role="alert">
+            {errors.password.message}
+          </p>
+        )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-      >
+      <Button type="submit" loading={isSubmitting} className="w-full">
         {isSubmitting ? 'Connexion...' : 'Se connecter'}
-      </button>
+      </Button>
 
-      <p className="text-center text-sm">
+      <p className="text-center text-sm text-slate-600">
         Pas encore de compte ?{' '}
-        <Link href="/auth/register" className="text-blue-600 hover:underline">
+        <Link href="/auth/register" className="link">
           S'inscrire
         </Link>
       </p>
@@ -146,11 +155,15 @@ export const RegisterForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {serverError && <div className="p-3 bg-red-100 text-red-700 rounded">{serverError}</div>}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      {serverError && (
+        <div className="alert-error" role="alert">
+          {serverError}
+        </div>
+      )}
 
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium mb-1">
+        <label htmlFor="fullName" className="label">
           Nom complet
         </label>
         <input
@@ -158,14 +171,18 @@ export const RegisterForm = () => {
           type="text"
           id="fullName"
           placeholder="Ahmed Dridi"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
-        {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName.message}</p>}
+        {errors.fullName && (
+          <p className="field-error" role="alert">
+            {errors.fullName.message}
+          </p>
+        )}
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-1">
+        <label htmlFor="email" className="label">
           Email
         </label>
         <input
@@ -173,14 +190,18 @@ export const RegisterForm = () => {
           type="email"
           id="email"
           placeholder="votre@email.com"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
-        {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
+        {errors.email && (
+          <p className="field-error" role="alert">
+            {errors.email.message}
+          </p>
+        )}
       </div>
 
       <div>
-        <label htmlFor="specialty" className="block text-sm font-medium mb-1">
+        <label htmlFor="specialty" className="label">
           Spécialité (optionnel)
         </label>
         <input
@@ -188,19 +209,19 @@ export const RegisterForm = () => {
           type="text"
           id="specialty"
           placeholder="Informatique"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
       </div>
 
       <div>
-        <label htmlFor="studyLevel" className="block text-sm font-medium mb-1">
+        <label htmlFor="studyLevel" className="label">
           Niveau d'études
         </label>
         <select
           {...register('studyLevel')}
           id="studyLevel"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         >
           <option value="BACHELOR">Licence</option>
@@ -210,7 +231,7 @@ export const RegisterForm = () => {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium mb-1">
+        <label htmlFor="password" className="label">
           Mot de passe
         </label>
         <input
@@ -218,14 +239,18 @@ export const RegisterForm = () => {
           type="password"
           id="password"
           placeholder="••••••"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
-        {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>}
+        {errors.password && (
+          <p className="field-error" role="alert">
+            {errors.password.message}
+          </p>
+        )}
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+        <label htmlFor="confirmPassword" className="label">
           Confirmer le mot de passe
         </label>
         <input
@@ -233,25 +258,23 @@ export const RegisterForm = () => {
           type="password"
           id="confirmPassword"
           placeholder="••••••"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="input"
           disabled={isSubmitting}
         />
         {errors.confirmPassword && (
-          <p className="text-red-600 text-sm mt-1">{errors.confirmPassword.message}</p>
+          <p className="field-error" role="alert">
+            {errors.confirmPassword.message}
+          </p>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-      >
+      <Button type="submit" loading={isSubmitting} className="w-full">
         {isSubmitting ? 'Inscription...' : "S'inscrire"}
-      </button>
+      </Button>
 
-      <p className="text-center text-sm">
+      <p className="text-center text-sm text-slate-600">
         Déjà inscrit ?{' '}
-        <Link href="/auth/login" className="text-blue-600 hover:underline">
+        <Link href="/auth/login" className="link">
           Se connecter
         </Link>
       </p>

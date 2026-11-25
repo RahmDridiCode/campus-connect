@@ -1,69 +1,101 @@
 'use client';
 
-import { useRequests } from '@/hooks/useRequests';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useRequests } from '@/hooks/useRequests';
 import { RequestCard } from '@/components/RequestCard';
 import { AppShell } from '@/components/AppShell';
+import { CardListSkeleton, EmptyState, PageHeader } from '@/components/UI';
+import { Icon } from '@/components/Icons';
 import { useAuth } from '@/hooks/useAuth';
 import { HelpRequestFilters } from '@/types/requests';
 
-export default function RequestsPage() {
+function RequestsContent() {
   const { requests, pagination, isLoading, fetchRequests } = useRequests();
   const { isAuthenticated } = useAuth();
+  const initialMine = useSearchParams().get('mine') === 'true';
   const [filters, setFilters] = useState<HelpRequestFilters>({
     page: 1,
-    limit: 10,
+    limit: 9,
+    mine: initialMine ? 'true' : undefined,
   });
 
   useEffect(() => {
     fetchRequests(filters);
   }, [filters, fetchRequests]);
 
-  return (
-    <AppShell>
-      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-        <h1 className="text-2xl font-bold">Demandes d'aide</h1>
-        <Link
-          href="/requests/new"
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Nouvelle demande
-        </Link>
-      </div>
+  const update = (patch: Partial<HelpRequestFilters>) =>
+    setFilters({ ...filters, ...patch, page: 1 });
 
-      {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow mb-8">
-        <h2 className="text-xl font-bold mb-4">🔍 Filtres</h2>
-        <div className="grid md:grid-cols-4 gap-4">
+  const hasFilters = !!(
+    filters.subject ||
+    filters.requiredLevel ||
+    filters.status ||
+    filters.search ||
+    filters.mine
+  );
+
+  return (
+    <>
+      <PageHeader
+        title="Demandes d'aide"
+        description={
+          pagination.total > 0
+            ? `${pagination.total} demande${pagination.total > 1 ? 's' : ''} trouvée${pagination.total > 1 ? 's' : ''}`
+            : 'Trouvez une demande à laquelle vous pouvez répondre.'
+        }
+        actions={
+          <Link href="/requests/new" className="btn-primary">
+            <Icon name="plus" className="h-4 w-4" />
+            Nouvelle demande
+          </Link>
+        }
+      />
+
+      <section aria-label="Filtres" className="card mb-6 p-4 sm:p-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label htmlFor="f-search" className="label">
+              Recherche
+            </label>
+            <div className="relative">
+              <Icon
+                name="search"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                id="f-search"
+                type="search"
+                placeholder="Titre ou description"
+                value={filters.search || ''}
+                onChange={(e) => update({ search: e.target.value || undefined })}
+                className="input pl-9"
+              />
+            </div>
+          </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Matière</label>
+            <label htmlFor="f-subject" className="label">
+              Matière
+            </label>
             <input
+              id="f-subject"
               type="text"
-              placeholder="Ex: Java"
+              placeholder="Ex : Java"
               value={filters.subject || ''}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  subject: e.target.value || undefined,
-                  page: 1,
-                })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded"
+              onChange={(e) => update({ subject: e.target.value || undefined })}
+              className="input"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Niveau</label>
+            <label htmlFor="f-level" className="label">
+              Niveau
+            </label>
             <select
+              id="f-level"
               value={filters.requiredLevel || ''}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  requiredLevel: (e.target.value as any) || undefined,
-                  page: 1,
-                })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded"
+              onChange={(e) => update({ requiredLevel: (e.target.value as any) || undefined })}
+              className="input"
             >
               <option value="">Tous les niveaux</option>
               <option value="BEGINNER">Débutant</option>
@@ -72,17 +104,14 @@ export default function RequestsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Statut</label>
+            <label htmlFor="f-status" className="label">
+              Statut
+            </label>
             <select
+              id="f-status"
               value={filters.status || ''}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  status: (e.target.value as any) || undefined,
-                  page: 1,
-                })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded"
+              onChange={(e) => update({ status: (e.target.value as any) || undefined })}
+              className="input"
             >
               <option value="">Tous les statuts</option>
               <option value="OPEN">Ouverte</option>
@@ -90,83 +119,88 @@ export default function RequestsPage() {
               <option value="COMPLETED">Terminée</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Recherche</label>
-            <input
-              type="text"
-              placeholder="Titre ou description"
-              value={filters.search || ''}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  search: e.target.value || undefined,
-                  page: 1,
-                })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-            />
-          </div>
-          {isAuthenticated && (
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={filters.mine === 'true'}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      mine: e.target.checked ? 'true' : undefined,
-                      page: 1,
-                    })
-                  }
-                />
-                Mes demandes uniquement
-              </label>
-            </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          {isAuthenticated ? (
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+              <input
+                type="checkbox"
+                checked={filters.mine === 'true'}
+                onChange={(e) => update({ mine: e.target.checked ? 'true' : undefined })}
+                className="h-4 w-4 rounded border-slate-300 text-brand-600"
+              />
+              Mes demandes uniquement
+            </label>
+          ) : (
+            <span />
+          )}
+          {hasFilters && (
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              onClick={() => setFilters({ page: 1, limit: 9 })}
+            >
+              Réinitialiser les filtres
+            </button>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* Results */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <p className="text-lg">⏳ Chargement...</p>
-        </div>
+        <CardListSkeleton count={6} />
       ) : requests.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg text-gray-600">Aucune demande trouvée</p>
-          <Link href="/requests/new" className="mt-4 inline-block text-blue-600 hover:underline">
-            Créer une demande →
-          </Link>
+        <div className="card">
+          <EmptyState
+            iconName="search"
+            title="Aucune demande ne correspond"
+            description={
+              hasFilters
+                ? 'Essayez de modifier ou de réinitialiser vos filtres.'
+                : "Aucune demande n'a encore été publiée."
+            }
+            action={{ label: 'Publier une demande', href: '/requests/new' }}
+          />
         </div>
       ) : (
         <>
-          <div className="grid gap-6 mb-8">
+          <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {requests.map((request) => (
               <RequestCard key={request.id} request={request} />
             ))}
           </div>
 
-          {/* Pagination */}
           {pagination.pages > 1 && (
-            <div className="flex justify-center gap-2">
+            <nav aria-label="Pagination" className="flex flex-wrap justify-center gap-1.5">
               {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
+                  type="button"
                   onClick={() => setFilters({ ...filters, page })}
-                  className={`px-3 py-2 rounded ${
+                  aria-current={page === pagination.page ? 'page' : undefined}
+                  className={`min-h-[40px] min-w-[40px] rounded-lg px-3 text-sm font-medium ${
                     page === pagination.page
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-300 hover:bg-gray-50'
+                      ? 'bg-brand-600 text-white'
+                      : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   {page}
                 </button>
               ))}
-            </div>
+            </nav>
           )}
         </>
       )}
+    </>
+  );
+}
+
+export default function RequestsPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={<CardListSkeleton count={6} />}>
+        <RequestsContent />
+      </Suspense>
     </AppShell>
   );
 }

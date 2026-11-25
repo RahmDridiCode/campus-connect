@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from './UI';
+import { Icon } from './Icons';
 
 interface Props {
   targetName: string;
   onSubmit: (rating: number, comment: string) => Promise<void>;
 }
 
-// Formulaire de notation : 1 à 5 étoiles + commentaire facultatif
+const ratingLabels = ['', 'Insuffisant', 'Passable', 'Bien', 'Très bien', 'Excellent'];
+
+// Formulaire de notation : 1 à 5 étoiles (boutons radio accessibles) + commentaire facultatif
 export const RatingForm = ({ targetName, onSubmit }: Props) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -33,32 +37,46 @@ export const RatingForm = ({ targetName, onSubmit }: Props) => {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} className="space-y-4 rounded-lg bg-slate-50 p-4">
       <h3 className="font-semibold">Évaluer {targetName}</h3>
       {error && (
-        <p className="text-red-600 text-sm" role="alert">
+        <p className="alert-error" role="alert">
           {error}
         </p>
       )}
-      <div>
-        <label htmlFor="rating" className="block text-sm font-medium mb-1">
-          Note
-        </label>
-        <select
-          id="rating"
-          value={rating}
-          onChange={(e) => setRating(Number(e.target.value))}
-          className="px-3 py-2 border border-gray-300 rounded"
-        >
-          {[5, 4, 3, 2, 1].map((n) => (
-            <option key={n} value={n}>
-              {n} / 5
-            </option>
+      <fieldset>
+        <legend className="label">Note</legend>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <label
+              key={n}
+              className="cursor-pointer rounded p-0.5 focus-within:ring-2 focus-within:ring-brand-500"
+            >
+              <input
+                type="radio"
+                name="rating"
+                value={n}
+                checked={rating === n}
+                onChange={() => setRating(n)}
+                className="sr-only"
+              />
+              <span className="sr-only">
+                {n} sur 5 — {ratingLabels[n]}
+              </span>
+              <Icon
+                name="star"
+                filled={n <= rating}
+                className={`h-8 w-8 transition-colors ${n <= rating ? 'text-amber-400' : 'text-slate-300 hover:text-amber-200'}`}
+              />
+            </label>
           ))}
-        </select>
-      </div>
+          <span className="ml-2 text-sm text-slate-600" aria-live="polite">
+            {rating}/5 — {ratingLabels[rating]}
+          </span>
+        </div>
+      </fieldset>
       <div>
-        <label htmlFor="comment" className="block text-sm font-medium mb-1">
+        <label htmlFor="comment" className="label">
           Commentaire (facultatif)
         </label>
         <textarea
@@ -67,16 +85,13 @@ export const RatingForm = ({ targetName, onSubmit }: Props) => {
           maxLength={500}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded"
+          className="input"
+          placeholder="Partagez votre expérience de la séance"
         />
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
+      <Button type="submit" loading={loading}>
         {loading ? 'Envoi...' : "Envoyer l'évaluation"}
-      </button>
+      </Button>
     </form>
   );
 };

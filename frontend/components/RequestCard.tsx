@@ -1,67 +1,52 @@
 'use client';
 
-import { HelpRequest } from '@/types/requests';
 import Link from 'next/link';
+import { HelpRequest } from '@/types/requests';
+import { formatDate, levelLabels } from '@/lib/format';
+import { Avatar, StatusBadge } from './UI';
+import { Icon } from './Icons';
 
-interface RequestCardProps {
-  request: HelpRequest;
-}
-
-export const RequestCard = ({ request }: RequestCardProps) => {
-  const levelColors = {
-    BEGINNER: 'bg-green-100 text-green-800',
-    INTERMEDIATE: 'bg-yellow-100 text-yellow-800',
-    ADVANCED: 'bg-red-100 text-red-800',
-  };
-
-  const statusColors = {
-    OPEN: 'bg-blue-100 text-blue-800',
-    HELP_ACCEPTED: 'bg-purple-100 text-purple-800',
-    COMPLETED: 'bg-gray-100 text-gray-800',
-  };
-
-  const statusLabels = {
-    OPEN: 'Ouverte',
-    HELP_ACCEPTED: 'Aide acceptée',
-    COMPLETED: 'Terminée',
-  };
-
-  return (
-    <Link href={`/requests/${request.id}`}>
-      <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition border border-gray-200">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-bold text-gray-800 flex-1">{request.title}</h3>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              statusColors[request.status]
-            }`}
-          >
-            {statusLabels[request.status]}
-          </span>
-        </div>
-
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{request.description}</p>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="bg-gray-100 px-3 py-1 rounded text-sm">📚 {request.subject}</span>
-          <span
-            className={`px-3 py-1 rounded text-xs font-semibold ${
-              levelColors[request.requiredLevel]
-            }`}
-          >
-            {request.requiredLevel === 'BEGINNER'
-              ? 'Débutant'
-              : request.requiredLevel === 'INTERMEDIATE'
-                ? 'Intermédiaire'
-                : 'Avancé'}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center text-sm text-gray-500">
-          <span>👤 {request.author?.fullName}</span>
-          <span>💬 {request._count?.proposals || 0} propositions</span>
-        </div>
-      </div>
-    </Link>
-  );
+const levelStyles: Record<string, string> = {
+  BEGINNER: 'bg-emerald-50 text-emerald-700',
+  INTERMEDIATE: 'bg-amber-50 text-amber-800',
+  ADVANCED: 'bg-rose-50 text-rose-700',
 };
+
+export const RequestCard = ({ request }: { request: HelpRequest }) => (
+  <Link
+    href={`/requests/${request.id}`}
+    className="card card-hover flex h-full flex-col p-5 hover:no-underline"
+  >
+    <div className="mb-3 flex items-start justify-between gap-3">
+      <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
+        <Icon name="book" className="h-3.5 w-3.5" />
+        {request.subject}
+      </span>
+      <StatusBadge status={request.status} />
+    </div>
+
+    <h3 className="line-clamp-2 text-base font-semibold text-slate-900">{request.title}</h3>
+    <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-slate-600">{request.description}</p>
+
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      <span
+        className={`rounded-md px-2 py-1 text-xs font-medium ${levelStyles[request.requiredLevel]}`}
+      >
+        {levelLabels[request.requiredLevel]}
+      </span>
+      <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+        <Icon name="chat" className="h-3.5 w-3.5" />
+        {request._count?.proposals ?? 0} proposition
+        {(request._count?.proposals ?? 0) > 1 ? 's' : ''}
+      </span>
+    </div>
+
+    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+      <span className="flex items-center gap-2">
+        <Avatar name={request.author?.fullName} className="h-6 w-6 text-[10px]" />
+        {request.author?.fullName}
+      </span>
+      <time dateTime={request.createdAt}>{formatDate(request.createdAt)}</time>
+    </div>
+  </Link>
+);
