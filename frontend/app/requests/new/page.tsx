@@ -1,23 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
 import { AppShell } from '@/components/AppShell';
-import { RequestForm, RequestFormPayload } from '@/components/RequestForm';
+import { RequestForm } from '@/components/RequestForm';
 import { PageHeader } from '@/components/UI';
-import { errorMessage } from '@/types/app';
+import { useRequestForm } from '@/hooks/useRequestForm';
 
 export default function NewRequestPage() {
-  const router = useRouter();
-
-  const create = async (data: RequestFormPayload) => {
-    try {
-      const res = await api.post('/requests', data);
-      router.push(`/requests/${res.data.data.id}`);
-    } catch (err) {
-      throw new Error(errorMessage(err));
-    }
-  };
+  const { create } = useRequestForm();
 
   return (
     <AppShell requireAuth>

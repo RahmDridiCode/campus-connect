@@ -1,9 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { AppShell } from '@/components/AppShell';
 import { ProposalCard } from '@/components/ProposalCard';
@@ -20,20 +19,18 @@ import {
 } from '@/components/UI';
 import { Icon } from '@/components/Icons';
 import { formatDate, levelLabels } from '@/lib/format';
-import { HelpRequest } from '@/types/requests';
-import { Proposal, Recommendation, Review, errorMessage } from '@/types/app';
+import { useRequestDetail } from '@/hooks/useRequestDetail';
+import { useRecommendations } from '@/hooks/useRecommendations';
+import { useRequestActions } from '@/hooks/useRequestActions';
+import { errorMessage } from '@/types/app';
 
 export default function RequestDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
 
-  const [request, setRequest] = useState<HelpRequest | null>(null);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [recos, setRecos] = useState<Recommendation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { request, proposals, reviews, loading, error, setError, reload: load } =
+    useRequestDetail(id, !!user);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
@@ -53,40 +50,8 @@ export default function RequestDetailPage() {
   const isAcceptedHelper = !!user && acceptedProposal?.proposerId === user.id;
   const myProposal = proposals.find((p) => p.proposerId === user?.id);
 
-  const load = useCallback(async () => {
-    try {
-      const { data } = await api.get(`/requests/${id}`);
-      setRequest(data.data);
-      setError(null);
-    } catch (err) {
-      setError(errorMessage(err, 'Demande introuvable'));
-      setLoading(false);
-      return;
-    }
-    if (user) {
-      const [p, r] = await Promise.allSettled([
-        api.get(`/requests/${id}/proposals`),
-        api.get(`/requests/${id}/reviews`),
-      ]);
-      if (p.status === 'fulfilled') setProposals(p.value.data.data);
-      if (r.status === 'fulfilled') setReviews(r.value.data.data);
-    }
-    setLoading(false);
-  }, [id, user]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Les recommandations ne sont affichées qu'à l'auteur d'une demande ouverte
-  useEffect(() => {
-    if (isAuthor && request?.status === 'OPEN') {
-      api
-        .get(`/requests/${id}/recommendations`)
-        .then((res) => setRecos(res.data.data))
-        .catch(() => setRecos([]));
-    }
-  }, [isAuthor, request?.status, id]);
+  const recos = useRecommendations(id, isAuthor && request?.status === 'OPEN');
+  const actions = useRequestActions(id);
 
   // Exécute une action API puis recharge la page
   const run = async (fn: () => Promise<unknown>, success: string) => {
@@ -110,13 +75,13 @@ export default function RequestDetailPage() {
     e.preventDefault();
     run(
       () =>
-        api.post(`/requests/${id}/proposals`, {
-          message: proposalMsg,
-          availabilities: proposalAvail
+        actions.sendProposal(
+          proposalMsg,
+          proposalAvail
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean),
-        }),
+        ),
       'Proposition envoyée',
     );
     setProposalMsg('');
@@ -126,12 +91,7 @@ export default function RequestDetailPage() {
   const sendReport = (e: React.FormEvent) => {
     e.preventDefault();
     run(
-      () =>
-        api.post('/reports', {
-          requestId: id,
-          reason: reportReason,
-          description: reportDesc || undefined,
-        }),
+      () => actions.sendReport(reportReason, reportDesc),
       'Signalement envoyé aux administrateurs',
     );
     setShowReport(false);
@@ -141,11 +101,7 @@ export default function RequestDetailPage() {
   const sendReview = async (rating: number, comment: string) => {
     const targetId = isAuthor ? acceptedProposal?.proposerId : request?.author?.id;
     try {
-      await api.post(`/requests/${id}/reviews`, {
-        targetId,
-        rating,
-        comment: comment || undefined,
-      });
+      await actions.sendReview(targetId, rating, comment);
     } catch (err) {
       throw new Error(errorMessage(err));
     }
@@ -478,7 +434,7 @@ export default function RequestDetailPage() {
           const { id: pid, action } = decision;
           setDecision(null);
           await run(
-            () => api.patch(`/proposals/${pid}/${action}`),
+            () => actions.decideProposal(pid, action),
             action === 'accept' ? 'Proposition acceptée' : 'Proposition refusée',
           );
         }}
@@ -494,7 +450,7 @@ export default function RequestDetailPage() {
         onConfirm={async () => {
           setBusy(true);
           try {
-            await api.delete(`/requests/${id}`);
+            await actions.remove();
             router.push('/requests');
           } catch (err) {
             setMessageType('error');
@@ -513,7 +469,7 @@ export default function RequestDetailPage() {
         onCancel={() => setDialog(null)}
         onConfirm={async () => {
           setDialog(null);
-          await run(() => api.post(`/requests/${id}/complete`), 'Séance terminée');
+          await run(() => actions.complete(), 'Séance terminée');
         }}
       />
     </AppShell>

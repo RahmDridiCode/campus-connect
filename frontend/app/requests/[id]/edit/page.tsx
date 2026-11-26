@@ -1,35 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import { useParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { RequestForm, RequestFormPayload } from '@/components/RequestForm';
 import { ErrorState, LoadingState, PageHeader } from '@/components/UI';
-import { HelpRequest } from '@/types/requests';
-import { errorMessage } from '@/types/app';
+import { useRequestDetail } from '@/hooks/useRequestDetail';
+import { useRequestForm } from '@/hooks/useRequestForm';
 
 export default function EditRequestPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const [request, setRequest] = useState<HelpRequest | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { request, error } = useRequestDetail(id, false);
+  const { update: save } = useRequestForm();
 
-  useEffect(() => {
-    api
-      .get(`/requests/${id}`)
-      .then((res) => setRequest(res.data.data))
-      .catch((err) => setError(errorMessage(err, 'Demande introuvable')));
-  }, [id]);
-
-  const update = async (data: RequestFormPayload) => {
-    try {
-      await api.patch(`/requests/${id}`, data);
-      router.push(`/requests/${id}`);
-    } catch (err) {
-      throw new Error(errorMessage(err));
-    }
-  };
+  const update = (data: RequestFormPayload) => save(id, data);
 
   return (
     <AppShell requireAuth>

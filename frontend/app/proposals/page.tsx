@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
 import { AppShell } from '@/components/AppShell';
 import { ProposalCard } from '@/components/ProposalCard';
 import {
@@ -14,46 +13,21 @@ import {
   Toast,
 } from '@/components/UI';
 import { Icon } from '@/components/Icons';
-import { Proposal, errorMessage } from '@/types/app';
+import { useMyProposals } from '@/hooks/useMyProposals';
 
 export default function ProposalsPage() {
-  const [sent, setSent] = useState<Proposal[]>([]);
-  const [received, setReceived] = useState<Proposal[]>([]);
+  const { sent, received, loading, error, decide: decideProposal } = useMyProposals();
   const [tab, setTab] = useState<'received' | 'sent'>('received');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<{ id: string; action: 'accept' | 'reject' } | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await api.get('/proposals/mine');
-      setSent(res.data.data.sent);
-      setReceived(res.data.data.received);
-      setError(null);
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
   const decide = async (id: string, action: 'accept' | 'reject') => {
     setBusy(true);
-    try {
-      await api.patch(`/proposals/${id}/${action}`);
+    if (await decideProposal(id, action)) {
       setToast(action === 'accept' ? 'Proposition acceptée' : 'Proposition refusée');
-      await load();
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
     }
+    setBusy(false);
   };
 
   const list = tab === 'received' ? received : sent;

@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
 import { AppShell } from '@/components/AppShell';
 import {
   Avatar,
@@ -17,7 +16,8 @@ import {
 } from '@/components/UI';
 import { Icon } from '@/components/Icons';
 import { formatDate } from '@/lib/format';
-import { Report, errorMessage } from '@/types/app';
+import { Report } from '@/types/app';
+import { useAdminReports } from '@/hooks/useAdminReports';
 
 const reasonLabels: Record<string, string> = {
   INAPPROPRIATE: 'Contenu inapproprié',
@@ -34,48 +34,24 @@ const filters: { value: Filter; label: string }[] = [
 ];
 
 export default function AdminReportsPage() {
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { reports, loading, error, reload: load, handle } = useAdminReports();
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('PENDING');
   const [pending, setPending] = useState<{ id: string; action: 'HIDE' | 'DISMISS' } | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await api.get('/admin/reports', { params: { limit: 50 } });
-      setReports(res.data.data);
-      setError(null);
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
   const confirmAction = async () => {
     if (!pending) return;
     setBusy(true);
-    try {
-      await api.patch(`/admin/reports/${pending.id}`, { action: pending.action });
+    if (await handle(pending.id, pending.action)) {
       setToast(
         pending.action === 'HIDE'
           ? 'Publication masquée et signalement traité.'
           : 'Signalement rejeté.',
       );
-      setPending(null);
-      await load();
-    } catch (err) {
-      setError(errorMessage(err));
-      setPending(null);
-    } finally {
-      setBusy(false);
     }
+    setPending(null);
+    setBusy(false);
   };
 
   const counts = useMemo(
